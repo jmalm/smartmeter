@@ -16,11 +16,15 @@ class EnergyMeter:
         self.condensed_end : datetime | None = None
         self.power_time_window = power_time_window
 
+        self.logger = logging.getLogger(__class__.__name__)
+
     def tick(self) -> None:
         """
         Tick the meter.
         """
-        self.ticks.append(datetime.now())
+        now = datetime.now()
+        self.ticks.append(now)
+        self.logger.debug(f"tick({now})")
     
     def stop(self) -> None:
         """
@@ -33,8 +37,7 @@ class EnergyMeter:
         Returns the energy usage since *since*, in kWh, instantaneous (last few ticks) power, and the time of the last tick.
         Resets the counter.
         """
-        logger = logging.getLogger(__class__.__name__)
-        logger.debug(f"total ticks: {len(self.ticks)}")
+        self.logger.debug(f"total ticks: {len(self.ticks)}")
 
         # Calculate energy usage.
         if since is None:
@@ -53,10 +56,10 @@ class EnergyMeter:
             elif self.condensed_start is not None and self.condensed_end is not None and since < self.condensed_end:
                 condensed_ticks_in_range = self._condensed_ticks_in_range(since, self.condensed_end)
                 n_energy_ticks += condensed_ticks_in_range
-        logger.debug(f"ticks since {since}: {n_energy_ticks}")
-        logger.debug(f"last tick: {last_tick}")
+        self.logger.debug(f"ticks since {since}: {n_energy_ticks}")
+        self.logger.debug(f"last tick: {last_tick}")
         energy = len(energy_ticks) / self.ticks_per_kwh
-        logger.debug(f"energy: {energy}")
+        self.logger.debug(f"energy: {energy}")
 
         # Calculate instantaneous power.
         power_ticks = [tick for tick in self.ticks if tick > last_tick - self.power_time_window]
@@ -70,7 +73,7 @@ class EnergyMeter:
                 instantaneous_power = None
             else:
                 instantaneous_power = energy_power_ticks / t_power * 3600
-            logger.debug(f"power: {instantaneous_power} ({n_power_ticks} ticks over {t_power} s)")
+            self.logger.debug(f"power: {instantaneous_power} ({n_power_ticks} ticks over {t_power} s)")
 
         return energy, instantaneous_power, last_tick
     
