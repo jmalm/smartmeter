@@ -1,14 +1,19 @@
 smartmeter_id = "smartmeter"
-gpio_pin = 14
+ticks_per_kwh = 1000 # Number of ticks per kWh
+
+gpio_pin = 14 # GPIO pin connected to energy meter
+gpio_pud = "down" # Pull-up/pull-down configuration for GPIO pin (up/down)
+gpio_edge = "falling" # Edge to detect for power tick (rising/falling)
+
 mqtt_server = "127.0.0.1"
 mqtt_port = 1883
 mqtt_homeassistant_discovery_prefix = "homeassistant"
 mqtt_user = ""
 mqtt_password = ""
-ticks_per_kwh = 1000
-send_interval = 300
-instantaneous_power_time_window_in_seconds = 30
-minimum_number_of_power_ticks = 3
+
+send_interval = 300 # Time in seconds between sending updates
+instantaneous_power_time_window_in_seconds = 30 # Time window to calculate instantaneous power
+minimum_number_of_power_ticks = 3 # Minimum ticks required to calculate power
 
 try:
     # Overwite default config values if provided in local_config.py.

@@ -61,7 +61,7 @@ def main():
         emulator = EmulatorTickProvider(energy_meter.tick, ticks_per_kwh=config.ticks_per_kwh, power_range=(1, 5))
     else:
         from gpio_tick_provider import GpioTickProvider
-        gpio = GpioTickProvider(energy_meter.tick, gpio_pin=config.gpio_pin)
+        gpio = GpioTickProvider(energy_meter.tick, pin=config.gpio_pin, pud=config.gpio_pud, edge=config.gpio_edge)
     
     last_sent_energy = datetime.now()
     while True:
