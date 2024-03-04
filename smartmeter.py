@@ -76,10 +76,11 @@ def main():
             except Exception as e:
                 logging.error(f"Error logging energy: {e}")
             else:
-                if last_tick:
-                    energy_meter.clear(last_tick)
-                    # TODO: Accumulate energy and just condense instead of clearing.
+                if last_tick is not None:
                     last_sent_energy = last_tick
+                    if instantaneous_power is not None:
+                        energy_meter.clear(last_tick)
+                        # TODO: Accumulate energy and just condense instead of clearing.
         except KeyboardInterrupt:
             break
     
