@@ -2,11 +2,9 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import logging
 
-import config
-
 
 class EnergyMeter:
-    def __init__(self, ticks_per_kwh : int):
+    def __init__(self, ticks_per_kwh : int, power_time_window : timedelta):
         """
         ticks_per_kwh: Number of ticks per kWh
         """
@@ -16,6 +14,7 @@ class EnergyMeter:
         self.condensed_ticks : int = 0
         self.condensed_start : datetime | None = None
         self.condensed_end : datetime | None = None
+        self.power_time_window = power_time_window
 
     def tick(self) -> None:
         """
@@ -29,7 +28,7 @@ class EnergyMeter:
         """
         raise NotImplementedError()
     
-    def calculate_energy(self, since : datetime | None) -> tuple[float, float, datetime | None]:
+    def calculate_energy(self, since : datetime | None) -> tuple[float, float | None, datetime | None]:
         """
         Returns the energy usage since *since*, in kWh, instantaneous (last few ticks) power, and the time of the last tick.
         Resets the counter.
@@ -60,12 +59,18 @@ class EnergyMeter:
         logger.debug(f"energy: {energy}")
 
         # Calculate instantaneous power.
-        power_ticks = [tick for tick in self.ticks if tick > last_tick - timedelta(seconds=config.instantaneous_power_time_window_in_seconds)]
-        n_power_ticks = len(power_ticks) - 1
-        energy_power_ticks = n_power_ticks / config.ticks_per_kwh
-        t_power = (power_ticks[-1] - power_ticks[0]).total_seconds()
-        instantaneous_power = energy_power_ticks / t_power * 3600
-        logger.debug(f"power: {instantaneous_power} ({n_power_ticks} ticks over {t_power} s)")
+        power_ticks = [tick for tick in self.ticks if tick > last_tick - self.power_time_window]
+        if len(power_ticks) < 2:
+            instantaneous_power = None
+        else:
+            n_power_ticks = len(power_ticks) - 1
+            energy_power_ticks = n_power_ticks / self.ticks_per_kwh
+            t_power = (power_ticks[-1] - power_ticks[0]).total_seconds()
+            if t_power == 0:
+                instantaneous_power = None
+            else:
+                instantaneous_power = energy_power_ticks / t_power * 3600
+            logger.debug(f"power: {instantaneous_power} ({n_power_ticks} ticks over {t_power} s)")
 
         return energy, instantaneous_power, last_tick
     

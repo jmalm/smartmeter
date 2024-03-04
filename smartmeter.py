@@ -5,7 +5,7 @@ over MQTT.
 
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import config
 from loggers import MqttLogger, StdoutLogger
@@ -49,7 +49,8 @@ def main():
                              config.mqtt_homeassistant_discovery_prefix)
     loggers = [stdout_logger, mqtt_logger]
 
-    energy_meter = EnergyMeter(ticks_per_kwh=config.ticks_per_kwh)
+    energy_meter = EnergyMeter(ticks_per_kwh=config.ticks_per_kwh,
+                               power_time_window=timedelta(seconds=config.instantaneous_power_time_window_in_seconds))
     
     # Start the tick provider up.
     emulator = None
@@ -69,7 +70,8 @@ def main():
             try:
                 for logger in loggers:
                     logger.energy(energy)
-                    logger.instantaneous_power(instantaneous_power)
+                    if instantaneous_power is not None:
+                        logger.instantaneous_power(instantaneous_power)
             except Exception as e:
                 logging.error(f"Error logging energy: {e}")
             else:
