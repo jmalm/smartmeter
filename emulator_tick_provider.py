@@ -1,3 +1,4 @@
+import logging
 import random
 import threading
 import time
@@ -22,20 +23,23 @@ class EmulatorTickProvider:
         self.thread = threading.Thread(target=self.run, args=(self.stop_event,))
         self.thread.start()
 
+        self.logger = logging.getLogger(__class__.__name__)
+
 
     def run(self, stop_event : threading.Event):
         while True:
             if stop_event.is_set():
                 break
             
-            power = self.get_emulated_power_usage()
-            if power == 0:
+            power_kw = self.get_emulated_power_usage()
+            self.logger.debug(f"Emulated power: {power_kw:.2f} kW")
+            if power_kw == 0:
                 # Just sleep a bit and get a new power usage
                 time.sleep(1)
                 continue
 
             # Tick every 1/self.ticks_per_kwh kWh
-            seconds_per_tick = (1 / self.ticks_per_kwh) / power * 3600
+            seconds_per_tick = (1 / self.ticks_per_kwh) / power_kw * 3600
             time.sleep(seconds_per_tick)
             self.energy_meter_tick()
         

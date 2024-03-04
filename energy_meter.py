@@ -76,7 +76,7 @@ class EnergyMeter:
                 instantaneous_power = None
             else:
                 instantaneous_power = energy_power_ticks / t_power * 3600
-            self.logger.debug(f"power: {instantaneous_power} ({n_power_ticks} ticks over {t_power} s)")
+            self.logger.debug(f"power: {instantaneous_power:.2f} ({n_power_ticks} ticks over {t_power} s)")
 
         return energy, instantaneous_power, last_tick
     
