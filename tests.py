@@ -9,7 +9,7 @@ class TestEnergyMeter(unittest.TestCase):
         """Test calculate_energy method, all ticks included."""
         #########
         # Arrange
-        meter = EnergyMeter(1000, timedelta(seconds=10))
+        meter = EnergyMeter(1000, timedelta(seconds=10), 2)
         start_tick = datetime(2022, 1, 1, 0, 0, 0)
         end_tick = datetime(2022, 1, 1, 0, 0, 2)
         meter.ticks = [
@@ -35,7 +35,7 @@ class TestEnergyMeter(unittest.TestCase):
         """Test calculate_energy method, including ticks since datetime for energy."""
         #########
         # Arrange
-        meter = EnergyMeter(1000, timedelta(seconds=10))
+        meter = EnergyMeter(1000, timedelta(seconds=10), 2)
         start_tick = datetime(2022, 1, 1, 0, 0, 0)
         end_tick = datetime(2022, 1, 1, 0, 0, 5)
         since = datetime(2022, 1, 1, 0, 0, 2)
@@ -66,7 +66,7 @@ class TestEnergyMeter(unittest.TestCase):
         """Test calculate_energy method, limiting power calculation ticks to window."""
         #########
         # Arrange
-        meter = EnergyMeter(1000, timedelta(seconds=10))
+        meter = EnergyMeter(1000, timedelta(seconds=10), 2)
         start_tick = datetime(2022, 1, 1, 0, 0, 0)
         end_tick = datetime(2022, 1, 1, 0, 0, 20)
         since = datetime(2022, 1, 1, 0, 0, 2)
@@ -99,7 +99,7 @@ class TestEnergyMeter(unittest.TestCase):
         """Test calculate_energy method, not enough ticks in power time window."""
         #########
         # Arrange
-        meter = EnergyMeter(1000, timedelta(seconds=10))
+        meter = EnergyMeter(1000, timedelta(seconds=10), 4)
         start_tick = datetime(2022, 1, 1, 0, 0, 0)
         end_tick = datetime(2022, 1, 1, 0, 0, 20)
         since = None
@@ -108,6 +108,8 @@ class TestEnergyMeter(unittest.TestCase):
             datetime(2022, 1, 1, 0, 0, 1),
             datetime(2022, 1, 1, 0, 0, 3),
             datetime(2022, 1, 1, 0, 0, 4),
+            datetime(2022, 1, 1, 0, 0, 14),
+            datetime(2022, 1, 1, 0, 0, 15),
             end_tick
         ]
 
@@ -123,7 +125,7 @@ class TestEnergyMeter(unittest.TestCase):
         """Test calculate_energy method, ticks time diff for power calculation is 0."""
         #########
         # Arrange
-        meter = EnergyMeter(1000, timedelta(seconds=10))
+        meter = EnergyMeter(1000, timedelta(seconds=10), 2)
         start_tick = datetime(2022, 1, 1, 0, 0, 0)
         end_tick = datetime(2022, 1, 1, 0, 0, 20)
         since = None

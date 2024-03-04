@@ -50,7 +50,8 @@ def main():
     loggers = [stdout_logger, mqtt_logger]
 
     energy_meter = EnergyMeter(ticks_per_kwh=config.ticks_per_kwh,
-                               power_time_window=timedelta(seconds=config.instantaneous_power_time_window_in_seconds))
+                               power_time_window=timedelta(seconds=config.instantaneous_power_time_window_in_seconds),
+                               min_power_ticks=config.minimum_number_of_power_ticks)
     
     # Start the tick provider up.
     emulator = None

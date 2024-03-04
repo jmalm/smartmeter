@@ -4,9 +4,11 @@ import logging
 
 
 class EnergyMeter:
-    def __init__(self, ticks_per_kwh : int, power_time_window : timedelta):
+    def __init__(self, ticks_per_kwh : int, power_time_window : timedelta, min_power_ticks : int):
         """
         ticks_per_kwh: Number of ticks per kWh
+        power_time_window: Time window to calculate instantaneous power over
+        min_power_ticks: Minimum ticks required in power_time_window to calculate power
         """
         self.ticks_per_kwh = ticks_per_kwh
         self.ticks : list[datetime] = []
@@ -15,6 +17,7 @@ class EnergyMeter:
         self.condensed_start : datetime | None = None
         self.condensed_end : datetime | None = None
         self.power_time_window = power_time_window
+        self.min_power_ticks = min_power_ticks
 
         self.logger = logging.getLogger(__class__.__name__)
 
@@ -63,7 +66,7 @@ class EnergyMeter:
 
         # Calculate instantaneous power.
         power_ticks = [tick for tick in self.ticks if tick > last_tick - self.power_time_window]
-        if len(power_ticks) < 2:
+        if len(power_ticks) < self.min_power_ticks:
             instantaneous_power = None
         else:
             n_power_ticks = len(power_ticks) - 1

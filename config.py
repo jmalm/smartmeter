@@ -8,6 +8,7 @@ mqtt_password = ""
 ticks_per_kwh = 1000
 send_interval = 300
 instantaneous_power_time_window_in_seconds = 30
+minimum_number_of_power_ticks = 3
 
 try:
     # Overwite default config values if provided in local_config.py.
