@@ -1,4 +1,5 @@
 smartmeter_id = "smartmeter"
+device_name = "Energy Meter"
 ticks_per_kwh = 1000 # Number of ticks per kWh
 
 gpio_pin = 14 # GPIO pin connected to energy meter

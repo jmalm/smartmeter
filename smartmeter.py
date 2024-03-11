@@ -46,7 +46,8 @@ def main():
                              config.entity_id,
                              config.mqtt_user,
                              config.mqtt_password,
-                             config.mqtt_homeassistant_discovery_prefix)
+                             config.mqtt_homeassistant_discovery_prefix,
+                             config.device_name)
     loggers = [stdout_logger, mqtt_logger]
 
     energy_meter = EnergyMeter(ticks_per_kwh=config.ticks_per_kwh,

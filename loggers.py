@@ -30,7 +30,7 @@ class MqttLogger(Logger):
     power_name = "instantaneous_power"
     energy_name = "accumulated_energy"
 
-    def __init__(self, server : str, port : int, entity_id : str, user : str, password : str, discovery_prefix : str):
+    def __init__(self, server: str, port: int, entity_id: str, user: str, password: str, discovery_prefix: str, device_name: str):
         super().__init__()
         
         self.logger = logging.getLogger(__class__.__name__)
@@ -39,6 +39,8 @@ class MqttLogger(Logger):
         self.entity_id = entity_id
         self.auth = {'username': user, 'password': password} if user else None
         self.discovery_prefix = discovery_prefix
+        self.device_name = device_name
+
         self.publish_discovery()
     
     def publish_discovery(self):
@@ -47,7 +49,7 @@ class MqttLogger(Logger):
         # Device
         device = {
             "identifiers": [self.entity_id],
-            "name": "Smartmeter Energy Meter"
+            "name": self.device_name
         }
 
         # Instantaneous power
@@ -86,16 +88,16 @@ class MqttLogger(Logger):
         # Publish discovery
         messages = [{"topic": power_config_topic, "payload": json.dumps(power_config), 'retain': True, 'qos': 1},
                     {"topic": energy_config_topic, "payload": json.dumps(energy_config), 'retain': True, 'qos': 1}]
-        publish.multiple(messages, hostname=self.server, port=self.port, auth=self.auth)
+        publish.multiple(messages, hostname=self.server, port=self.port, auth=self.auth) # type: ignore
     
     def instantaneous_power(self, power: float):
         from paho.mqtt import publish
         topic = self.state_topic_template.format(entity_id=self.entity_id, measurement=self.power_name)
         message = {"power": power, "unit_of_measurement": "kW"}
-        publish.single(topic, payload=json.dumps(message), hostname=self.server, port=self.port, auth=self.auth)
+        publish.single(topic, payload=json.dumps(message), hostname=self.server, port=self.port, auth=self.auth) # type: ignore
 
     def accumulated_energy(self, energy: float, last_reset: datetime):
         from paho.mqtt import publish
         topic = self.state_topic_template.format(entity_id=self.entity_id, measurement=self.energy_name)
         message = {"energy": energy, "unit_of_measurement": "kWh", "last_reset": last_reset.isoformat()}
-        publish.single(topic, payload=json.dumps(message), hostname=self.server, port=self.port, auth=self.auth)
+        publish.single(topic, payload=json.dumps(message), hostname=self.server, port=self.port, auth=self.auth) # type: ignore
