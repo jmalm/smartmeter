@@ -57,8 +57,10 @@ def main():
     emulator = None
     gpio = None
     if args.emulate:
-        from emulator_tick_provider import EmulatorTickProvider
-        emulator = EmulatorTickProvider(energy_meter.tick, ticks_per_kwh=config.ticks_per_kwh, power_range=(1, 5))
+        from emulator_tick_provider import EmulatorTickProvider, create_slowly_varying_random, create_step
+        power_fun = create_slowly_varying_random(0.05, 5)
+        power_fun = create_step(197, 0.05, 5)
+        emulator = EmulatorTickProvider(energy_meter.tick, power_fun, ticks_per_kwh=config.ticks_per_kwh, power_range=(1, 5))
     else:
         from gpio_tick_provider import GpioTickProvider
         gpio = GpioTickProvider(energy_meter.tick, pin=config.gpio_pin, pud=config.gpio_pud, edge=config.gpio_edge)
