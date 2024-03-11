@@ -1,0 +1,14 @@
+[Unit]
+Description=Smartmeter to Home Assistant logger
+After=network-online.target
+
+[Service]
+ExecStart=/bin/python /home/pi/smartmeter/smartmeter.py --verbose
+WorkingDirectory=/home/pi/smartmeter
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target
