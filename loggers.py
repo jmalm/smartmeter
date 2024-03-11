@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import logging
 
@@ -7,7 +8,7 @@ class Logger:
         """Send instantaneous power"""
         raise NotImplementedError()
     
-    def energy(self, energy : float) -> None:
+    def accumulated_energy(self, energy : float, last_reset : datetime) -> None:
         """Send accumulated energy usage"""
         raise NotImplementedError()
 
@@ -17,17 +18,17 @@ class StdoutLogger(Logger):
         super().__init__()
 
     def instantaneous_power(self, power : float):
-        print(f"Instantaneous power (kW): {power}")
+        print(f"Instantaneous power: {power} kW")
 
-    def energy(self, energy: float):
-        print(f"Accumulated energy usage (kWh): {energy}")
+    def accumulated_energy(self, energy: float, last_reset : datetime):
+        print(f"Accumulated energy since {last_reset}: {energy} kWh")
 
 
 class MqttLogger(Logger):
     state_topic_template = "{entity_id}/{measurement}"
     config_topic_template = "{discovery_prefix}/sensor/{object_id}/config"
     power_name = "instantaneous_power"
-    energy_name = "energy"
+    energy_name = "accumulated_energy"
 
     def __init__(self, server : str, port : int, entity_id : str, user : str, password : str, discovery_prefix : str):
         super().__init__()
@@ -77,6 +78,7 @@ class MqttLogger(Logger):
             "state_topic": energy_state_topic,
             "device_class": "energy",
             "value_template": "{{ value_json.energy }}",
+            "state_class": "total",
             "unique_id": energy_object_id,
             "device": device
         }
@@ -92,8 +94,8 @@ class MqttLogger(Logger):
         message = {"power": power, "unit_of_measurement": "kW"}
         publish.single(topic, payload=json.dumps(message), hostname=self.server, port=self.port, auth=self.auth)
 
-    def energy(self, energy: float):
+    def accumulated_energy(self, energy: float, last_reset: datetime):
         from paho.mqtt import publish
         topic = self.state_topic_template.format(entity_id=self.entity_id, measurement=self.energy_name)
-        message = {"energy": energy, "unit_of_measurement": "kWh"}
+        message = {"energy": energy, "unit_of_measurement": "kWh", "last_reset": last_reset.isoformat()}
         publish.single(topic, payload=json.dumps(message), hostname=self.server, port=self.port, auth=self.auth)

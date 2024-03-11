@@ -50,8 +50,7 @@ def main():
     loggers = [stdout_logger, mqtt_logger]
 
     energy_meter = EnergyMeter(ticks_per_kwh=config.ticks_per_kwh,
-                               power_time_window=timedelta(seconds=config.instantaneous_power_time_window_in_seconds),
-                               min_power_ticks=config.minimum_number_of_power_ticks)
+                               power_time_window=timedelta(seconds=config.instantaneous_power_time_window_in_seconds))
     
     # Start the tick provider up.
     emulator = None
@@ -65,24 +64,16 @@ def main():
         from gpio_tick_provider import GpioTickProvider
         gpio = GpioTickProvider(energy_meter.tick, pin=config.gpio_pin, pud=config.gpio_pud, edge=config.gpio_edge)
     
-    last_sent_energy = datetime.now()
+    last_reset = datetime.now()
     while True:
         try:
             time.sleep(config.send_interval)
-            energy, instantaneous_power, last_tick = energy_meter.calculate_energy(last_sent_energy)
             try:
                 for logger in loggers:
-                    logger.energy(energy)
-                    if instantaneous_power is not None:
-                        logger.instantaneous_power(instantaneous_power)
+                    logger.accumulated_energy(energy_meter.accumulated_energy_kwh, last_reset)
+                    logger.instantaneous_power(energy_meter.instantaneous_power_kw)
             except Exception as e:
                 logging.error(f"Error logging energy: {e}")
-            else:
-                if last_tick is not None:
-                    last_sent_energy = last_tick
-                    if instantaneous_power is not None:
-                        energy_meter.clear(last_tick)
-                        # TODO: Accumulate energy and just condense instead of clearing.
         except KeyboardInterrupt:
             break
     

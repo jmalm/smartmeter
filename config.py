@@ -13,7 +13,6 @@ mqtt_password = ""
 
 send_interval = 300 # Time in seconds between sending updates
 instantaneous_power_time_window_in_seconds = 30 # Time window to calculate instantaneous power
-minimum_number_of_power_ticks = 3 # Minimum ticks required to calculate power
 
 try:
     # Overwite default config values if provided in local_config.py.

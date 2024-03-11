@@ -5,147 +5,64 @@ from energy_meter import EnergyMeter
 
 
 class TestEnergyMeter(unittest.TestCase):
-    def test_calculate_energy(self):
-        """Test calculate_energy method, all ticks included."""
-        #########
+    def test_accumulated_energy(self):
+        """Test accumulated energy calculation"""
         # Arrange
-        meter = EnergyMeter(1000, timedelta(seconds=10), 2)
-        start_tick = datetime(2022, 1, 1, 0, 0, 0)
-        end_tick = datetime(2022, 1, 1, 0, 0, 2)
-        meter.ticks = [
-            start_tick,
-            datetime(2022, 1, 1, 0, 0, 1),
-            end_tick
-        ]
-        power_time_delta_h = (end_tick - start_tick).total_seconds() / 3600
-        power_energy_kwh = 2 / 1000
-        expected_power_kw = power_energy_kwh / power_time_delta_h
+        meter = EnergyMeter(1000, timedelta(seconds=10))
 
-        #########
         # Act
-        energy, power, last_tick = meter.calculate_energy(None)
+        meter.tick()
+        meter.tick()
+        meter.tick()
 
-        #########
         # Assert
-        self.assertEqual(energy, 3 / 1000)
-        self.assertEqual(power, expected_power_kw)
-        self.assertEqual(last_tick, end_tick)
-        
-    def test_calculate_energy_from_datetime(self):
-        """Test calculate_energy method, including ticks since datetime for energy."""
-        #########
+        self.assertEqual(meter.accumulated_energy_kwh, 3 / 1000)
+    
+    def test_instantaneous_power(self):
+        """Test instantaneous power calculation"""
         # Arrange
-        meter = EnergyMeter(1000, timedelta(seconds=10), 2)
-        start_tick = datetime(2022, 1, 1, 0, 0, 0)
-        end_tick = datetime(2022, 1, 1, 0, 0, 5)
-        since = datetime(2022, 1, 1, 0, 0, 2)
-        meter.ticks = [
-            start_tick,
-            datetime(2022, 1, 1, 0, 0, 1),
-            datetime(2022, 1, 1, 0, 0, 3),
-            datetime(2022, 1, 1, 0, 0, 4),
-            end_tick
-        ]
-        expected_energy_kwh = 3 / 1000
-        power_time_delta_h = (end_tick - start_tick).total_seconds() / 3600
-        power_energy_kwh = 4 / 1000
-        expected_power_kw = power_energy_kwh / power_time_delta_h
+        power_time_window = timedelta(seconds=10)
+        meter = EnergyMeter(1000, power_time_window)
 
-        #########
         # Act
-        energy, power, last_tick = meter.calculate_energy(since)
+        meter.tick()
+        meter.tick()
+        meter.tick()
 
-        #########
         # Assert
-        self.assertAlmostEqual(energy, expected_energy_kwh)
-        self.assertIsNotNone(power)
-        self.assertAlmostEqual(power, expected_power_kw) # type: ignore
-        self.assertEqual(last_tick, end_tick)
-        
-    def test_calculate_energy_limit_power_ticks(self):
-        """Test calculate_energy method, limiting power calculation ticks to window."""
-        #########
+        t_delta_h = power_time_window.total_seconds() / 3600
+        expected_power_kw = (3 / 1000) / t_delta_h
+        self.assertAlmostEqual(meter.instantaneous_power_kw, expected_power_kw)
+    
+    def test_instantaneous_power_no_ticks(self):
+        """Test instantaneous power calculation with no ticks during time window"""
         # Arrange
-        meter = EnergyMeter(1000, timedelta(seconds=10), 2)
-        start_tick = datetime(2022, 1, 1, 0, 0, 0)
-        end_tick = datetime(2022, 1, 1, 0, 0, 20)
-        since = datetime(2022, 1, 1, 0, 0, 2)
+        power_time_window = timedelta(seconds=10)
+        meter = EnergyMeter(1000, power_time_window)
+
+        # Act
+
+        # Assert
+        self.assertAlmostEqual(meter.instantaneous_power_kw, 0)
+    
+    def test_instantaneous_power_old_ticks(self):
+        """Test instantaneous power calculation with ticks outside time window"""
+        # Arrange
+        power_time_window = timedelta(seconds=10)
+        meter = EnergyMeter(1000, power_time_window)
+
+        # Act
         meter.ticks = [
-            start_tick,
             datetime(2022, 1, 1, 0, 0, 1),
             datetime(2022, 1, 1, 0, 0, 3),
-            datetime(2022, 1, 1, 0, 0, 4),
-            datetime(2022, 1, 1, 0, 0, 14),
-            datetime(2022, 1, 1, 0, 0, 15),
-            end_tick
+            datetime(2022, 1, 1, 0, 0, 4)
         ]
-        expected_energy_kwh = 5 / 1000
-        power_time_delta_h = (end_tick - datetime(2022, 1, 1, 0, 0, 14)).total_seconds() / 3600
-        power_energy_kwh = 2 / 1000
-        expected_power_kw = power_energy_kwh / power_time_delta_h
+        meter.tick()
 
-        #########
-        # Act
-        energy, power, last_tick = meter.calculate_energy(since)
-
-        #########
         # Assert
-        self.assertAlmostEqual(energy, expected_energy_kwh)
-        self.assertIsNotNone(power)
-        self.assertAlmostEqual(power, expected_power_kw) # type: ignore
-        self.assertEqual(last_tick, end_tick)
-        
-    def test_calculate_energy_not_enough_power_ticks(self):
-        """Test calculate_energy method, not enough ticks in power time window."""
-        #########
-        # Arrange
-        meter = EnergyMeter(1000, timedelta(seconds=10), 4)
-        start_tick = datetime(2022, 1, 1, 0, 0, 0)
-        end_tick = datetime(2022, 1, 1, 0, 0, 20)
-        since = None
-        meter.ticks = [
-            start_tick,
-            datetime(2022, 1, 1, 0, 0, 1),
-            datetime(2022, 1, 1, 0, 0, 3),
-            datetime(2022, 1, 1, 0, 0, 4),
-            datetime(2022, 1, 1, 0, 0, 14),
-            datetime(2022, 1, 1, 0, 0, 15),
-            end_tick
-        ]
-
-        #########
-        # Act
-        _, power, _ = meter.calculate_energy(since)
-
-        #########
-        # Assert
-        self.assertIsNone(power)
-        
-    def test_calculate_energy_0_power_time(self):
-        """Test calculate_energy method, ticks time diff for power calculation is 0."""
-        #########
-        # Arrange
-        meter = EnergyMeter(1000, timedelta(seconds=10), 2)
-        start_tick = datetime(2022, 1, 1, 0, 0, 0)
-        end_tick = datetime(2022, 1, 1, 0, 0, 20)
-        since = None
-        meter.ticks = [
-            start_tick,
-            datetime(2022, 1, 1, 0, 0, 1),
-            datetime(2022, 1, 1, 0, 0, 3),
-            datetime(2022, 1, 1, 0, 0, 4),
-            end_tick,
-            end_tick
-        ]
-
-        #########
-        # Act
-        _, power, _ = meter.calculate_energy(since)
-
-        #########
-        # Assert
-        self.assertIsNone(power)
-
+        t_delta_h = power_time_window.total_seconds() / 3600
+        expected_power_kw = (1 / 1000) / t_delta_h
+        self.assertAlmostEqual(meter.instantaneous_power_kw, expected_power_kw)
 
 
 if __name__ == '__main__':
