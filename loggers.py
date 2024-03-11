@@ -82,8 +82,8 @@ class MqttLogger(Logger):
         }
 
         # Publish discovery
-        messages = [{"topic": power_config_topic, "payload": json.dumps(power_config)},
-                    {"topic": energy_config_topic, "payload": json.dumps(energy_config)}]
+        messages = [{"topic": power_config_topic, "payload": json.dumps(power_config), 'retain': True, 'qos': 1},
+                    {"topic": energy_config_topic, "payload": json.dumps(energy_config), 'retain': True, 'qos': 1}]
         publish.multiple(messages, hostname=self.server, port=self.port, auth=self.auth)
     
     def instantaneous_power(self, power: float):
