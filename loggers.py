@@ -13,15 +13,16 @@ class Logger:
         raise NotImplementedError()
 
 
-class StdoutLogger(Logger):
+class LoggingLogger(Logger):
     def __init__(self):
         super().__init__()
+        self.logger = logging.getLogger(__class__.__name__)
 
     def instantaneous_power(self, power : float):
-        print(f"Instantaneous power: {power} kW")
+        self.logger.info(f"Instantaneous power: {power:.3f} kW")
 
     def accumulated_energy(self, energy: float, last_reset : datetime):
-        print(f"Accumulated energy since {last_reset}: {energy} kWh")
+        self.logger.info(f"Accumulated energy since {last_reset.isoformat()}: {energy:.3f} kWh")
 
 
 class MqttLogger(Logger):
@@ -89,6 +90,8 @@ class MqttLogger(Logger):
         messages = [{"topic": power_config_topic, "payload": json.dumps(power_config), 'retain': True, 'qos': 1},
                     {"topic": energy_config_topic, "payload": json.dumps(energy_config), 'retain': True, 'qos': 1}]
         publish.multiple(messages, hostname=self.server, port=self.port, auth=self.auth) # type: ignore
+        self.logger.info(f"Published discovery for {self.entity_id}")
+        self.logger.debug(f"Discovery messages: {messages}")
     
     def instantaneous_power(self, power: float):
         from paho.mqtt import publish

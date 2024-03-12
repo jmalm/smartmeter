@@ -5,10 +5,10 @@ over MQTT.
 
 """
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import time
 import config
-from loggers import MqttLogger, StdoutLogger
+from loggers import MqttLogger, LoggingLogger
 from energy_meter import EnergyMeter
 import logging
 
@@ -40,7 +40,7 @@ def main():
         logging.basicConfig(level=logging.INFO)
 
 
-    stdout_logger = StdoutLogger()
+    stdout_logger = LoggingLogger()
     mqtt_logger = MqttLogger(config.mqtt_server,
                              config.mqtt_port,
                              config.entity_id,
@@ -65,13 +65,12 @@ def main():
         from gpio_tick_provider import GpioTickProvider
         gpio = GpioTickProvider(energy_meter.tick, pin=config.gpio_pin, pud=config.gpio_pud, edge=config.gpio_edge)
     
-    last_reset = datetime.now()
     while True:
         try:
             time.sleep(config.send_interval)
             try:
                 for logger in loggers:
-                    logger.accumulated_energy(energy_meter.accumulated_energy_kwh, last_reset)
+                    logger.accumulated_energy(energy_meter.accumulated_energy_kwh, energy_meter.started)
                     logger.instantaneous_power(energy_meter.instantaneous_power_kw)
             except Exception as e:
                 logging.error(f"Error logging energy: {e}")

@@ -17,6 +17,8 @@ class EnergyMeter:
         self.energy_per_tick_kwh = 1 / ticks_per_kwh
         self.accumulated_energy_kwh = 0
 
+        self.started = datetime.now()
+
     def tick(self) -> None:
         """
         Tick the meter.
